@@ -68,6 +68,7 @@
 #include <haproxy/shctx.h>
 #include <haproxy/ssl_ckch.h>
 #include <haproxy/ssl_crtlist.h>
+#include <haproxy/ssl_load.h>
 #include <haproxy/ssl_sock.h>
 #include <haproxy/ssl_utils.h>
 #include <haproxy/stats-t.h>
@@ -78,7 +79,6 @@
 #include <haproxy/time.h>
 #include <haproxy/tools.h>
 #include <haproxy/vars.h>
-
 
 /* ***** READ THIS before adding code here! *****
  *
@@ -3598,7 +3598,14 @@ int ssl_sock_load_cert(char *path, struct bind_conf *bind_conf, char **err)
 
 			return ssl_sock_load_ckchs(path, ckchs, bind_conf, NULL, NULL, 0, &ckch_inst, err);
 		} else {
-			return ssl_sock_load_cert_list_file(path, 1, bind_conf, bind_conf->frontend, err);
+#ifdef USE_IO_URING
+			cfgerr = ssl_load_certiodir(path, &cert_iobuf_tree);
+#endif
+			cfgerr |= ssl_sock_load_cert_list_file(path, 1, bind_conf, bind_conf->frontend, err);
+#ifdef USE_IO_URING
+			ssl_free_certiodir(path, &cert_iobuf_tree);
+#endif
+			return cfgerr;
 		}
 	} else {
 		/* stat failed, could be a bundle */

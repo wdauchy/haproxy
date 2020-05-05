@@ -1,0 +1,18 @@
+Linux IO_URING support for HAProxy
+==================================
+
+0. Build
+--------
+
+Add the following parameters to your make options:
+
+- USE_IO_URING=1
+- IO_URING_INC='/path/to/liburing/src/include/'
+- IO_URING_LIB='/path/to/liburing/src/'
+
+1. Certificates loading
+-----------------------
+
+HAProxy can make use of IO_URING in order to reduce the number of syscall used
+to load the certificates. It requires Linux kernel >= v5.6 according to the
+operations used (statx, open, read, close).

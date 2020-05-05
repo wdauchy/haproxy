@@ -52,6 +52,7 @@
 #   USE_SYSTEMD          : enable sd_notify() support.
 #   USE_OBSOLETE_LINKER  : use when the linker fails to emit __start_init/__stop_init
 #   USE_THREAD_DUMP      : use the more advanced thread state dump system. Automatic.
+#   USE_IO_URING         : use IO_URING advanced async features
 #
 # Options can be forced by specifying "USE_xxx=1" or can be disabled by using
 # "USE_xxx=" (empty string). The list of enabled and disabled options for a
@@ -290,7 +291,8 @@ use_opts = USE_EPOLL USE_KQUEUE USE_NETFILTER                                 \
            USE_GETADDRINFO USE_OPENSSL USE_LUA USE_FUTEX USE_ACCEPT4          \
            USE_ZLIB USE_SLZ USE_CPU_AFFINITY USE_TFO USE_NS                   \
            USE_DL USE_RT USE_DEVICEATLAS USE_51DEGREES USE_WURFL USE_SYSTEMD  \
-           USE_OBSOLETE_LINKER USE_PRCTL USE_THREAD_DUMP USE_EVPORTS
+           USE_OBSOLETE_LINKER USE_PRCTL USE_THREAD_DUMP USE_EVPORTS          \
+           USE_IO_URING
 
 #### Target system options
 # Depending on the target platform, some options are set, as well as some
@@ -526,6 +528,12 @@ endif
 
 ifneq ($(USE_BACKTRACE),)
 OPTIONS_LDFLAGS += -Wl,$(if $(EXPORT_SYMBOL),$(EXPORT_SYMBOL),--export-dynamic)
+endif
+
+ifneq ($(USE_IO_URING),)
+OPTIONS_OBJS  += src/ssl_load.o
+OPTIONS_CFLAGS  += $(if $(IO_URING_INC),-I$(IO_URING_INC))
+OPTIONS_LDFLAGS += $(if $(IO_URING_LIB),-L$(IO_URING_LIB)) -luring
 endif
 
 ifneq ($(USE_OPENSSL),)

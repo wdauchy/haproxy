@@ -30,6 +30,7 @@
 #include <haproxy/errors.h>
 #include <haproxy/ssl_ckch.h>
 #include <haproxy/ssl_sock.h>
+#include <haproxy/ssl_load.h>
 #include <haproxy/ssl_utils.h>
 #include <haproxy/stream_interface.h>
 #include <haproxy/tools.h>
@@ -251,12 +252,22 @@ end:
  */
 int ssl_sock_load_files_into_ckch(const char *path, struct cert_key_and_chain *ckch, char **err)
 {
+	char *buf = NULL;
 	int ret = 1;
+#ifdef USE_IO_URING
+	struct ebmb_node *eb = NULL;
+	struct cert_iobuf *cert_io;
+
+	eb = ebst_lookup(&cert_iobuf_tree, path);
+	if (eb) {
+		cert_io = ebmb_entry(eb, struct cert_iobuf, node);
+		buf = cert_io->buf;
+	}
+#endif
 
 	/* try to load the PEM */
-	if (ssl_sock_load_pem_into_ckch(path, NULL, ckch , err) != 0) {
+	if (ssl_sock_load_pem_into_ckch(path, buf, ckch , err) != 0)
 		goto end;
-	}
 
 	/* try to load an external private key if it wasn't in the PEM */
 	if ((ckch->key == NULL) && (global_ssl.extra_files & SSL_GF_KEY)) {
