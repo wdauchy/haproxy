@@ -531,6 +531,7 @@ OPTIONS_LDFLAGS += -Wl,$(if $(EXPORT_SYMBOL),$(EXPORT_SYMBOL),--export-dynamic)
 endif
 
 ifneq ($(USE_IO_URING),)
+OPTIONS_OBJS  += src/uring.o
 OPTIONS_OBJS  += src/ssl_load.o
 OPTIONS_CFLAGS  += $(if $(IO_URING_INC),-I$(IO_URING_INC))
 OPTIONS_LDFLAGS += $(if $(IO_URING_LIB),-L$(IO_URING_LIB)) -luring
