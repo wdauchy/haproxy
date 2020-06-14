@@ -3094,10 +3094,15 @@ static void set_identity(const char *program_name)
 
 int main(int argc, char **argv)
 {
+	struct timeval tv_init_start;
+	struct timeval tv_init_end;
+	unsigned int time_elapsed;
 	int err, retry;
 	struct rlimit limit;
 	char errmsg[100];
 	int pidfd = -1;
+
+	tv_now(&tv_init_start);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -3690,6 +3695,11 @@ int main(int argc, char **argv)
 	/*
 	 * That's it : the central polling loop. Run until we stop.
 	 */
+
+	tv_now(&tv_init_end);
+	time_elapsed = tv_ms_elapsed(&tv_init_start, &tv_init_end);
+	ha_notice("global init time: %dms\n", time_elapsed);
+
 #ifdef USE_THREAD
 	{
 		sigset_t     blocked_sig, old_sig;
